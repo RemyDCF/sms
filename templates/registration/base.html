@@ -1,0 +1,80 @@
+{% load crispy_forms_tags %}
+{% load static %}
+{% load i18n %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <title>SMS</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"/>
+    <style>
+        body {
+            background-color: #000;
+            background-size: cover;
+            background-image: url("/static/login-image.jpg");
+            background-repeat: no-repeat;
+            background-position: center center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-attachment: fixed;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 0.25em;
+            padding: 5em 5em;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 1em;
+        }
+
+        .alert > ul {
+            list-style: none !important;
+        }
+    </style>
+    <script src="https://kit.fontawesome.com/fd5534873f.js" integrity="sha384-0R8uMnSIOPPA/NyiuIGzF0KZK3ufYUg1PTAXKjJwPys6vjFgtPpxoyGIF+ekBFlR" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div class="messages-container">
+    {% if messages %}
+        <ul class="messages" style="padding-left: 0 !important;">
+            {% for message in messages %}
+                <div class="alert
+                        {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                        alert-danger
+                        {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+                        alert-warning
+                        {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                        alert-success
+                        {% else %}
+                        alert-primary
+                        {% endif %}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>
+<div class="container shadow">
+    <div class="row">
+            <form method="post">
+                {% csrf_token %}
+                {{ form | crispy }}
+                {% block buttons %}{% endblock %}
+            </form>
+    </div>
+</div>
+</body>
+
+</html>

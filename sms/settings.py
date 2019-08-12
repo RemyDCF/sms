@@ -39,6 +39,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "crispy_forms",
+    "rest_framework",
+    "maintenance_mode",
+    "webpush",
 ]
 
 MIDDLEWARE = [
@@ -52,6 +56,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "sms.urls"
+CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 TEMPLATES = [
     {
@@ -108,6 +113,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+WEBPUSH_SETTINGS = {
+    "VAPID_PUBLIC_KEY": "BM7nNo7OFK5C-U3PRp45UuU-a4A7cfBBb4SFy6WjKOm4usgchbmnUMSuYh4vRrZ1BHX9UXcMgx19Efsn7G9AGbc",
+    "VAPID_PRIVATE_KEY": "oVDpQ5HYi2OPyPjsSrTGhRNpnNneksS17BybZXvtAGw",
+    "VAPID_ADMIN_EMAIL": "sms@remydcf.dev",
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
@@ -128,4 +139,14 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
+if not DEBUG:
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
+else:
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
 MAINTENANCE_MODE_STATE_FILE_PATH = "maintenance_mode_state.txt"
+TWILIO_ACCOUNT_SIDS = os.environ.get("TWILIO_ACCOUNT_SIDS", "")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
+TWILIO_PHONE_NUMBER = os.environ.get("TWILIO_PHONE_NUMBER", "")
+
+GITHUB_WEBHOOK_KEY = os.environ.get("GITHUB_WEBHOOK_KEY", "")

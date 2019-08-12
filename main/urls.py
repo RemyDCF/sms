@@ -2,4 +2,7 @@ from django.urls import path
 
 from . import views
 
-urlpatterns = [path("", views.index, name="main.index")]
+urlpatterns = [
+    path("", views.index, name="main.index"),
+    path("deploy", views.deploy, name="main.deploy"),
+]

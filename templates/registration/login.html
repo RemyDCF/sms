@@ -1,0 +1,16 @@
+{% extends "registration/base.html" %}
+{% load i18n %}
+
+{% block buttons %}
+    <div class="row">
+        <div class="col">
+            <button class="btn btn-primary btn-block shadow" type="submit">
+                <i class="fas fa-sign-in-alt"></i> {% trans "Log in" %}
+            </button>
+        </div>
+        <div class="col-md-auto">
+            <a class="btn btn-secondary btn-block shadow" href="{% url 'password_reset' %}"><i
+                    class="fas fa-key"></i> {% trans "Reset password" %}</a>
+        </div>
+    </div>
+{% endblock %}

@@ -5,6 +5,7 @@ import subprocess
 from _sha1 import sha1
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.utils.encoding import force_bytes
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -15,6 +16,7 @@ from django.http import HttpResponseForbidden, HttpResponseServerError, HttpResp
 from django.shortcuts import render
 
 
+@login_required
 def index(request):
     return render(request, "main.html")
 

@@ -1,3 +1,5 @@
+{% load webpush_notifications %}
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6,10 +8,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <script src="https://kit.fontawesome.com/fd5534873f.js" integrity="sha384-0R8uMnSIOPPA/NyiuIGzF0KZK3ufYUg1PTAXKjJwPys6vjFgtPpxoyGIF+ekBFlR" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    {% webpush_header %}
     <style>
         .col {
-            height: 100vh;
+            min-height: 100vh;
             padding: 0 !important;
         }
 
@@ -65,6 +69,7 @@
 
         .message {
             max-width: 200px;
+            margin-bottom: 15px;
         }
 
         .message-view {
@@ -77,10 +82,12 @@
 
         .message-received > .square {
             background-color: #eeeeee;
+            border-bottom-left-radius: 0;
         }
 
         .message-sent > .square {
             background-color: greenyellow;
+            border-bottom-right-radius: 0;
         }
 
         .message-sent {
@@ -88,7 +95,7 @@
         }
 
         .square {
-            border-radius: 5px;
+            border-radius: 15px;
             padding: 15px;
             margin-bottom: 5px;
         }
@@ -103,46 +110,107 @@
             padding: 15px;
         }
 
-        #message-field {
+        #message {
             flex-basis: auto; /* default value */
+            flex-grow: 1;
+        }
+
+        #webpush-subscribe-button {
+            width: 100%;
+            height: 30px;
+            background: #000044;
+            border-color: #000044;
+            color: #fff;
+        }
+
+        .transparent-button {
+            background-color: transparent;
+            color: white;
+            border-color: transparent;
+        }
+
+        #toolbar {
+            display: flex;
+            background-color: rgba(0,0,0,0.15);
+        }
+
+        #balance {
+            flex-basis: auto;
             flex-grow: 1;
         }
     </style>
 </head>
 <body>
+{% webpush_button %}
 <div class="container-fluid">
+    <div class="modal fade" id="addContactModal" tabindex="-1" role="dialog" aria-labelledby="addContactModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addContactModalLabel">Ajouter un contact</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-contact-form" v-on:submit.prevent="addContact">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="name-field">Nom</label>
+                            <input type="text" class="form-control" id="name-field" name="name" placeholder="">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone-field">Numéro de téléphone</label>
+                            <input type="tel" class="form-control" id="phone-field" name="phone-number" placeholder="+41000000000">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                    <button type="submit" class="btn btn-primary" form="add-contact-form">Ajouter</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col col-md-3 blue">
             <div>
-                <div v-for="contact in contacts" class="contact">
+                <div id="toolbar" class="top-bar">
+                    <span id="balance">[[ balance ]]$</span>
+                    <button type="button" data-toggle="modal" data-target="#addContactModal" class="transparent-button">
+                        <i class="fas fa-plus-circle"></i>
+                    </button>
+                </div>
+                <div v-for="(contact, index) in contacts" class="contact" v-on:click="selectedConversation = index">
                     <img :src="contact.image_url" class="avatar">
                     <div>
                         <p>[[ contact.name ]]</p>
-                        <p class="subtitle"><img :src="contacts[selectedConversation].flag_url"> [[ contact.phone_number_formatted ]]</p>
+                        <p class="subtitle"><img :src="contact.flag_url"> [[ contact.phone_number_formatted ]]</p>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col col-md-9">
-            <div class="top-bar">
+            <div class="top-bar" v-if="contacts !== []">
                 <img :src="contacts[selectedConversation].image_url" class="avatar">
                 <div>
                     <p>[[ contacts[selectedConversation].name ]]</p>
                     <p class="subtitle-dark"><img :src="contacts[selectedConversation].flag_url"> [[ contacts[selectedConversation].phone_number_formatted ]]</p>
                 </div>
             </div>
-            <div class="message-form">
-                <form class="form-inline">
-  <label class="sr-only" for="message-field">Message</label>
-  <input type="text" class="form-control mb-2 mr-sm-2" id="message-field" placeholder="Message">
-
-  <button type="submit" class="btn btn-primary mb-2">Envoyer</button>
-</form>
+            <div class="message-form" v-if="contacts !== []">
+                <form class="form-inline message-form" id="send-message-bar" v-on:submit.prevent="send">
+                    {% csrf_token %}
+                    <label class="sr-only" for="message">Message</label>
+                    <input type="text" class="form-control mb-2 mr-sm-2" id="message" placeholder="Message" name="message">
+                    <input type="hidden" class="form-control mb-2 mr-sm-2" id="contact_id" :value="contacts[selectedConversation].id" name="contact_id">
+                    <button type="submit" class="btn btn-primary mb-2">Envoyer</button>
+                </form>
             </div>
-            <div>
+            <div v-if="contacts !== []">
                 <div class="message-view">
                     <div v-for="message in contacts[selectedConversation].messages" class="message" v-bind:class="{ 'message-received': message.contact_is_sender, 'message-sent': !message.contact_is_sender }">
-                        <div class="square">
+                        <div class="square shadow-sm">
                             [[ message.text ]]
                         </div>
                         <p class="date">[[ (new Date(message.timestamp)).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) ]]</p>
@@ -152,37 +220,63 @@
         </div>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 <script>
+    function updateData() {
+        axios
+            .get(`/api/contacts`)
+            .then(response => (app.contacts = response.data))
+            .catch(error => console.log(error));
+
+        axios
+            .get(`/api/balance`)
+            .then(response => (app.balance = response.data))
+            .catch(error => console.log(error));
+    }
+
     var app = new Vue({
         el: '.container-fluid',
         data: {
-            contacts: [{
-                name: "Rémy Da Costa Faro",
-                phone_number: "+411234567890",
-                phone_number_formatted: "+411234567890",
-                image_url: "https://www.tinygraphs.com/isogrids/+411234567890?theme=duskfalling&numcolors=4&size=220&fmt=svg",
-                flag_url: "https://www.countryflags.io/ch/flat/24.png",
-                messages: [
-                    {
-                        text: "Test !",
-                        contact_is_sender: true,
-                        timestamp: "2019-08-10T14:47:07+00:00"
-                    },
-                    {
-                        text: "Test !",
-                        contact_is_sender: false,
-                        timestamp: "2019-08-10T14:48:07+00:00"
-                    }
-                ]
-            }],
-            selectedConversation: 0
+            contacts: [],
+            selectedConversation: 0,
+            balance: "--.--"
         },
         delimiters: ['[[', ']]'],
-    })
+        mounted() {
+            updateData();
+        },
+        methods: {
+            send: function (event) {
+                $.ajax({
+                    type: 'post',
+                    url: '/api/messages/send',
+                    data: $('send-message-bar').serialize(),
+                    success: function () {
+                        document.getElementById("send-message-bar").reset();
+                        updateData();
+                    }
+                });
+            },
+            addContact: function (event) {
+                $.ajax({
+                    type: 'post',
+                    url: '/api/contacts',
+                    data: $('#add-contact-form').serialize(),
+                    success: function () {
+                        document.getElementById("add-contact-form").reset();
+                        updateData();
+                    }
+                });
+            },
+        }
+    });
+
+    window.setInterval(function () {
+        updateData();
+    }, 5000);
 </script>
 </body>
 </html>

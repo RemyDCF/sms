@@ -1,0 +1,10 @@
+{% extends "registration/base.html" %}
+{% load i18n %}
+
+{% block buttons %}
+    <h3>{% trans "You were logged out" %}</h3>
+    <p>{% trans "Thanks for spending some quality time with the Web site today." %}</p>
+    <a class="btn btn-primary shadow" href="{% url 'login' %}">
+        <i class="fas fa-sign-in-alt"></i> {% trans 'Log in again' %}
+    </a>
+{% endblock %}
