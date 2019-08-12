@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>SMS</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <script src="https://kit.fontawesome.com/fd5534873f.js" integrity="sha384-0R8uMnSIOPPA/NyiuIGzF0KZK3ufYUg1PTAXKjJwPys6vjFgtPpxoyGIF+ekBFlR" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        .col {
+            height: 100vh;
+            padding: 0 !important;
+        }
+
+        .blue {
+            background-color: #003366;
+            color: white;
+            padding: 2em;
+        }
+
+        .contact {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .contact:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            height: 50px;
+            width: 50px;
+            border-radius: 50%;
+        }
+
+        .contact > div, .top-bar > div {
+            flex-direction: column;
+            padding-left: 1em;
+        }
+
+        .contact p, .top-bar p {
+            margin-bottom: 0;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .subtitle-dark {
+            color: rgba(0,0,0,0.8);
+        }
+
+        .top-bar {
+            background-color: rgba(0,0,0,0.05);
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .message {
+            max-width: 200px;
+        }
+
+        .message-view {
+            padding: 0 15px;
+        }
+
+        .message-sent {
+            margin-left: auto;
+        }
+
+        .message-received > .square {
+            background-color: #eeeeee;
+        }
+
+        .message-sent > .square {
+            background-color: greenyellow;
+        }
+
+        .message-sent {
+            text-align: right;
+        }
+
+        .square {
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 5px;
+        }
+
+        .date {
+            font-size: x-small;
+            margin: 0 15px;
+        }
+
+        .message-form {
+            width: 100%;
+            padding: 15px;
+        }
+
+        #message-field {
+            flex-basis: auto; /* default value */
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col col-md-3 blue">
+            <div>
+                <div v-for="contact in contacts" class="contact">
+                    <img :src="contact.image_url" class="avatar">
+                    <div>
+                        <p>[[ contact.name ]]</p>
+                        <p class="subtitle"><img :src="contacts[selectedConversation].flag_url"> [[ contact.phone_number_formatted ]]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col col-md-9">
+            <div class="top-bar">
+                <img :src="contacts[selectedConversation].image_url" class="avatar">
+                <div>
+                    <p>[[ contacts[selectedConversation].name ]]</p>
+                    <p class="subtitle-dark"><img :src="contacts[selectedConversation].flag_url"> [[ contacts[selectedConversation].phone_number_formatted ]]</p>
+                </div>
+            </div>
+            <div class="message-form">
+                <form class="form-inline">
+  <label class="sr-only" for="message-field">Message</label>
+  <input type="text" class="form-control mb-2 mr-sm-2" id="message-field" placeholder="Message">
+
+  <button type="submit" class="btn btn-primary mb-2">Envoyer</button>
+</form>
+            </div>
+            <div>
+                <div class="message-view">
+                    <div v-for="message in contacts[selectedConversation].messages" class="message" v-bind:class="{ 'message-received': message.contact_is_sender, 'message-sent': !message.contact_is_sender }">
+                        <div class="square">
+                            [[ message.text ]]
+                        </div>
+                        <p class="date">[[ (new Date(message.timestamp)).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) ]]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script>
+    var app = new Vue({
+        el: '.container-fluid',
+        data: {
+            contacts: [{
+                name: "Rémy Da Costa Faro",
+                phone_number: "+411234567890",
+                phone_number_formatted: "+411234567890",
+                image_url: "https://www.tinygraphs.com/isogrids/+411234567890?theme=duskfalling&numcolors=4&size=220&fmt=svg",
+                flag_url: "https://www.countryflags.io/ch/flat/24.png",
+                messages: [
+                    {
+                        text: "Test !",
+                        contact_is_sender: true,
+                        timestamp: "2019-08-10T14:47:07+00:00"
+                    },
+                    {
+                        text: "Test !",
+                        contact_is_sender: false,
+                        timestamp: "2019-08-10T14:48:07+00:00"
+                    }
+                ]
+            }],
+            selectedConversation: 0
+        },
+        delimiters: ['[[', ']]'],
+    })
+</script>
+</body>
+</html>
