@@ -12,9 +12,15 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     {% webpush_header %}
     <style>
+        body {
+            overflow: hidden;
+        }
+
         .col {
-            min-height: 100vh;
-            padding: 0 !important;
+            height: 100vh;
+            padding: 0 0 25px 0!important;
+            overflow: hidden;
+            overflow-y: scroll;
         }
 
         .blue {
@@ -138,6 +144,10 @@
             flex-basis: auto;
             flex-grow: 1;
         }
+
+        .square > p {
+            margin-bottom: 0px;
+        }
     </style>
 </head>
 <body>
@@ -202,7 +212,7 @@
                 <form class="form-inline message-form" id="send-message-bar" v-on:submit.prevent="send">
                     {% csrf_token %}
                     <label class="sr-only" for="message">Message</label>
-                    <input type="text" class="form-control mb-2 mr-sm-2" id="message" placeholder="Message" name="message">
+                    <input type="text" class="form-control mb-2 mr-sm-2 shadow" id="message" placeholder="Message" name="message">
                     <input type="hidden" class="form-control mb-2 mr-sm-2" id="contact_id" :value="contacts[selectedConversation].id" name="contact_id">
                     <button type="submit" class="btn btn-primary mb-2">Envoyer</button>
                 </form>
@@ -211,7 +221,9 @@
                 <div class="message-view">
                     <div v-for="message in contacts[selectedConversation].messages" class="message" v-bind:class="{ 'message-received': message.contact_is_sender, 'message-sent': !message.contact_is_sender }">
                         <div class="square shadow-sm">
-                            [[ message.text ]]
+                            <p v-if='message.media_url !== ""'><a :href="message.media_url" target="_blank"><i class="fas fa-external-link-alt"></i> Voir le média</a></p>
+                            <hr v-if='message.text !== "" && message.media_url !== ""'>
+                            <p v-if='message.text !== ""'>[[ message.text ]]</p>
                         </div>
                         <p class="date">[[ (new Date(message.timestamp)).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) ]]</p>
                     </div>
@@ -253,7 +265,7 @@
                 $.ajax({
                     type: 'post',
                     url: '/api/messages/send',
-                    data: $('send-message-bar').serialize(),
+                    data: $('#send-message-bar').serialize(),
                     success: function () {
                         document.getElementById("send-message-bar").reset();
                         updateData();

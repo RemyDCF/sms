@@ -17,8 +17,10 @@ import requests
 twilio_client = Client(settings.TWILIO_ACCOUNT_SIDS, settings.TWILIO_AUTH_TOKEN)
 
 
-def sendPush(title, body):
+def sendPush(title, body, media):
     payload = {"head": title, "body": body, "url": "https://sms.remydcf.dev/"}
+    if media != "":
+        payload["icon"] = media
     users = User.objects.all()
     for user in users:
         send_user_notification(user=user, payload=payload, ttl=1000)
@@ -47,6 +49,7 @@ class Contacts(APIView):
                             "text": x.text,
                             "contact_is_sender": x.contact_is_sender,
                             "timestamp": x.timestamp,
+                            "media_url": x.media_url,
                         }
                         for x in contact.message_set.order_by("-timestamp").all()
                     ],
@@ -73,6 +76,7 @@ class Messages(APIView):
     def post(self, request, format=None):
         body = request.POST.get("Body", None)
         from_contact = request.POST.get("From", None)
+        media_url = request.POST.get("MediaUrl0", "")
         contact = None
         try:
             contact = Contact.objects.filter(phone_number=from_contact).all()[0]
@@ -80,9 +84,11 @@ class Messages(APIView):
             contact = Contact(name=from_contact, phone_number=from_contact)
             contact.save()
 
-        message = Message(text=body, contact=contact, contact_is_sender=True)
+        message = Message(
+            text=body, contact=contact, contact_is_sender=True, media_url=media_url
+        )
         message.save()
-        sendPush(contact.name, body)
+        sendPush(contact.name, body, media_url)
         return Response("", status=status.HTTP_201_CREATED)
 
 

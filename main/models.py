@@ -12,3 +12,4 @@ class Message(models.Model):
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
     contact_is_sender = models.BooleanField()
     timestamp = models.DateTimeField(default=timezone.now, blank=True)
+    media_url = models.CharField(max_length=500)
