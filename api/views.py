@@ -3,6 +3,7 @@ import logging
 import phonenumbers
 from django.conf import settings
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -67,6 +68,50 @@ class Contacts(APIView):
         )
         contact.save()
         return Response("Created.", status=status.HTTP_201_CREATED)
+
+
+class IndividualContact(APIView):
+    def get(self, request, id, format=None):
+        if not request.user.is_authenticated:
+            return Response("Not authenticated", status=status.HTTP_403_FORBIDDEN)
+
+        contact = get_object_or_404(Contact, id=request.POST.get("contact-id", None))
+
+        a = {
+            "id": contact.id,
+            "name": contact.name,
+            "phone_number": contact.phone_number,
+            "phone_number_formatted": phonenumbers.format_number(
+                phonenumbers.parse(contact.phone_number, None),
+                phonenumbers.PhoneNumberFormat.INTERNATIONAL,
+            ),
+            "image_url": f"https://www.tinygraphs.com/isogrids/{contact.phone_number}?theme=duskfalling&numcolors=4&size=220&fmt=svg",
+            "flag_url": f"https://www.countryflags.io/{phonenumbers.region_code_for_country_code(phonenumbers.parse(contact.phone_number, None).country_code).lower()}/flat/24.png",
+            "messages": [
+                {
+                    "text": x.text,
+                    "contact_is_sender": x.contact_is_sender,
+                    "timestamp": x.timestamp,
+                    "media_url": x.media_url,
+                }
+                for x in contact.message_set.order_by("-timestamp").all()
+            ],
+        }
+        return JsonResponse(a, safe=False)
+
+    def post(self, request, id, format=None):
+        if not request.user.is_authenticated:
+            return Response("Not authenticated", status=status.HTTP_403_FORBIDDEN)
+
+        contact = get_object_or_404(Contact, id=id)
+
+        name = request.POST.get("name", None)
+
+        if name is not None:
+            contact.name = name
+
+        contact.save()
+        return Response("Edited.", status=status.HTTP_200_OK)
 
 
 class Messages(APIView):

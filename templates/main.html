@@ -182,6 +182,31 @@
             </div>
         </div>
     </div>
+    <div v-if="contacts !== []" class="modal fade" id="editContactModal" tabindex="-1" role="dialog" aria-labelledby="addContactModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editContactModal">Éditer un contact</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-contact-form" v-on:submit.prevent="editContact">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="name-field">Nom</label>
+                            <input type="text" class="form-control" id="name-field" name="name" placeholder="" v-model="contacts[selectedConversation].name">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                    <button type="submit" class="btn btn-primary" form="edit-contact-form">Éditer</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col col-md-3 blue">
             <div>
@@ -207,6 +232,9 @@
                     <p>[[ contacts[selectedConversation].name ]]</p>
                     <p class="subtitle-dark"><img :src="contacts[selectedConversation].flag_url"> [[ contacts[selectedConversation].phone_number_formatted ]]</p>
                 </div>
+                <button type="button" data-toggle="modal" data-target="#editContactModal" class="transparent-button">
+                    <i class="fas fa-user-edit"></i>
+                </button>
             </div>
             <div class="message-form" v-if="contacts !== []">
                 <form class="form-inline message-form" id="send-message-bar" v-on:submit.prevent="send">
@@ -214,7 +242,7 @@
                     <label class="sr-only" for="message">Message</label>
                     <input type="text" class="form-control mb-2 mr-sm-2 shadow" id="message" placeholder="Message" name="message">
                     <input type="hidden" class="form-control mb-2 mr-sm-2" id="contact_id" :value="contacts[selectedConversation].id" name="contact_id">
-                    <button type="submit" class="btn btn-primary mb-2">Envoyer</button>
+                    <button type="submit" class="btn btn-primary mb-2 shadow">Envoyer</button>
                 </form>
             </div>
             <div v-if="contacts !== []">
@@ -279,6 +307,17 @@
                     data: $('#add-contact-form').serialize(),
                     success: function () {
                         document.getElementById("add-contact-form").reset();
+                        updateData();
+                    }
+                });
+            },
+            editContact: function (event) {
+                $.ajax({
+                    type: 'post',
+                    url: '/api/contacts/' + this.selectedConversation,
+                    data: $('#edit-contact-form').serialize(),
+                    success: function () {
+                        document.getElementById("edit-contact-form").reset();
                         updateData();
                     }
                 });
