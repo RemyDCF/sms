@@ -148,5 +148,6 @@ MAINTENANCE_MODE_STATE_FILE_PATH = "maintenance_mode_state.txt"
 TWILIO_ACCOUNT_SIDS = os.environ.get("TWILIO_ACCOUNT_SIDS", "")
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
 TWILIO_PHONE_NUMBER = os.environ.get("TWILIO_PHONE_NUMBER", "")
+REDIRECT_PHONE_NUMBER = os.environ.get("REDIRECT_PHONE_NUMBER", "")
 
 GITHUB_WEBHOOK_KEY = os.environ.get("GITHUB_WEBHOOK_KEY", "")

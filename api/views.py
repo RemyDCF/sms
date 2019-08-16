@@ -103,7 +103,7 @@ class IndividualContact(APIView):
         if not request.user.is_authenticated:
             return Response("Not authenticated", status=status.HTTP_403_FORBIDDEN)
 
-        contact = get_object_or_404(Contact, id=id)
+        contact = get_object_or_404(Contact, pk=id)
 
         name = request.POST.get("name", None)
 
@@ -134,7 +134,15 @@ class Messages(APIView):
         )
         message.save()
         sendPush(contact.name, body, media_url)
-        return Response("", status=status.HTTP_201_CREATED)
+        message = twilio_client.messages.create(
+            body=f"From {contact.name}:\n{body}",
+            from_=settings.TWILIO_PHONE_NUMBER,
+            to=settings.REDIRECT_PHONE_NUMBER,
+        )
+        return Response(
+            '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class SendMessages(APIView):
